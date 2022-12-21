@@ -27,5 +27,14 @@ require('lspconfig')['clangd'].setup({
 
 -- General Configuration
 vim.opt.clipboard = 'unnamedplus' -- shared system clipboard
+
+vim.opt.splitbelow = true
+vim.opt.splitright = true
+
 vim.opt.list = true
 vim.opt.listchars = { tab = '> ', trail = '·', eol = '¬' }
+whitespace = require('whitespace')
+
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
+vim.opt.expandtab = true

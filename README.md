@@ -4,5 +4,6 @@ Lua based neovim config.
 
 ## Dependencies
 
-https://github.com/wbthomason/packer.nvim#quickstart
+- Install packer
+  https://github.com/wbthomason/packer.nvim#quickstart
 
