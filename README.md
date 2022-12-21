@@ -6,6 +6,3 @@ Lua based neovim config.
 
 https://github.com/wbthomason/packer.nvim#quickstart
 
-```
-sudo apt install fd-find
-```

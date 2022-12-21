@@ -25,3 +25,7 @@ require('lspconfig')['clangd'].setup({
     capabilities = capabilities,
   })
 
+-- General Configuration
+vim.opt.clipboard = 'unnamedplus' -- shared system clipboard
+vim.opt.list = true
+vim.opt.listchars = { tab = '> ', trail = '·', eol = '¬' }

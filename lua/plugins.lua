@@ -33,5 +33,11 @@ return require('packer').startup(function(use)
 	use 'tjdevries/gruvbuddy.nvim'
 
 	-- File explorer
-	use 'nvim-tree/nvim-tree.lua'
+	use {
+		'nvim-tree/nvim-tree.lua',
+		requires = {
+    	'nvim-tree/nvim-web-devicons', -- optional, for file icons
+  	},
+	}
+
 end)
