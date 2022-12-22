@@ -28,6 +28,9 @@ require('lspconfig')['clangd'].setup({
 -- General Configuration
 vim.opt.clipboard = 'unnamedplus' -- shared system clipboard
 
+vim.opt.colorcolumn = { 80 }
+vim.api.nvim_set_hl(0, 'ColorColumn', { bg = 'black' })
+
 vim.opt.splitbelow = true
 vim.opt.splitright = true
 
