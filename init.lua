@@ -25,12 +25,15 @@ require('lspconfig')['clangd'].setup({
     capabilities = capabilities,
   })
 
-require('neodev').setup()
-require('lspconfig')['sumneko_lua'].setup({
-    capabilities = capabilities,
-    cmd = { vim.fn.expand('$HOME/.local/luals/bin/lua-language-server') },
-    settings = { Lua = { completion = { callSnippet = "Replace" } } },
-  })
+local lua_exe = vim.fn.expand('$HOME/.local/luals/bin/lua-language-server')
+if vim.fn.empty(lua_exe) == 0 then
+  require('neodev').setup()
+  require('lspconfig')['sumneko_lua'].setup({
+      capabilities = capabilities,
+      cmd = { vim.fn.expand('$HOME/.local/luals/bin/lua-language-server') },
+      settings = { Lua = { completion = { callSnippet = "Replace" } } },
+    })
+end
 
 -- General Configuration
 vim.opt.clipboard = 'unnamedplus' -- shared system clipboard
