@@ -29,6 +29,7 @@ require('neodev').setup()
 require('lspconfig')['sumneko_lua'].setup({
     capabilities = capabilities,
     cmd = { vim.fn.expand('$HOME/.local/luals/bin/lua-language-server') },
+    settings = { Lua = { completion = { callSnippet = "Replace" } } },
   })
 
 -- General Configuration

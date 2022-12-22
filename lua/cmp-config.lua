@@ -1,6 +1,11 @@
 local cmp = require('cmp')
 
 cmp.setup({
+    snippet = {
+      expand = function(args)
+        require('snippy').expand_snippet(args.body)
+      end,
+    },
     window = {
       -- completion = cmp.config.window.bordered(),
       -- documentation = cmp.config.window.bordered(),
