@@ -25,6 +25,12 @@ require('lspconfig')['clangd'].setup({
     capabilities = capabilities,
   })
 
+require('neodev').setup()
+require('lspconfig')['sumneko_lua'].setup({
+    capabilities = capabilities,
+    cmd = { vim.fn.expand('$HOME/.local/luals/bin/lua-language-server') },
+  })
+
 -- General Configuration
 vim.opt.clipboard = 'unnamedplus' -- shared system clipboard
 
@@ -36,7 +42,7 @@ vim.opt.splitright = true
 
 vim.opt.list = true
 vim.opt.listchars = { tab = '> ', trail = '·', eol = '¬' }
-whitespace = require('whitespace')
+Whitespace = require('whitespace')
 
 vim.opt.tabstop = 2
 vim.opt.shiftwidth = 2
