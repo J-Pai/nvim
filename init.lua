@@ -1,4 +1,6 @@
-local plugins = require('plugins')
+require('plugins')
+
+require('mason').setup()
 
 -- Theme
 require('colorbuddy').colorscheme('gruvbuddy')
@@ -7,30 +9,43 @@ require('colorbuddy').colorscheme('gruvbuddy')
 require('tree-config')
 
 -- LSP Configuration
-local lsp_config = require('lspconfig')
-lsp_config.pylsp.setup{}
-lsp_config.luau_lsp.setup{}
+local lspconfig = require('lspconfig')
+local mason_lspconfig = require('mason-lspconfig')
+lspconfig.pylsp.setup({})
+lspconfig.luau_lsp.setup({})
 
 -- Configure autocomplete after LSP configuration
 require('cmp-config')
 
 -- Set up lspconfig.
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
-
-require('lspconfig')['pylsp'].setup({
-    capabilities = capabilities,
-  })
-
-require('lspconfig')['clangd'].setup({
-    capabilities = capabilities,
-  })
-
 require('neodev').setup()
-require('lspconfig')['sumneko_lua'].setup({
-    capabilities = capabilities,
-    cmd = { plugins and plugins.lua_exe or '' },
-    settings = { Lua = { completion = { callSnippet = "Replace" } } },
-  })
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
+
+local servers = {
+  clangd = {},
+  pylsp = {},
+  sumneko_lua = {
+    Lua = {
+      workspace = { checkThirdParty = false },
+      telemetry = { enable = false },
+    },
+  },
+}
+
+mason_lspconfig.setup({
+  ensure_installed = vim.tbl_keys(servers),
+})
+
+mason_lspconfig.setup_handlers({
+  function(server_name)
+    require('lspconfig')[server_name].setup({
+      capabilities = capabilities,
+      on_attach = require('lsp-config').on_attach,
+      settings = servers[server_name],
+    })
+  end,
+})
 
 -- General Configuration
 vim.opt.clipboard = 'unnamedplus' -- shared system clipboard

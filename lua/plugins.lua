@@ -36,18 +36,38 @@ local packer = require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
 
   -- nvim LSP
-  use 'neovim/nvim-lspconfig'
+  use {
+    'neovim/nvim-lspconfig',
+    requires = {
+      'williamboman/mason.nvim',
+      'williamboman/mason-lspconfig.nvim',
+      'j-hui/fidget.nvim',
+      'folke/neodev.nvim'
+    },
+  }
   use 'anott03/nvim-lspinstall'
-  use 'hrsh7th/nvim-cmp'
-  use 'hrsh7th/cmp-nvim-lsp'
-  use 'hrsh7th/cmp-buffer'
-  use 'hrsh7th/cmp-cmdline'
-  use 'dcampos/nvim-snippy'
-  use 'dcampos/cmp-snippy'
-  use 'folke/neodev.nvim'
+  use {
+    'hrsh7th/nvim-cmp',
+    requires = {
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-cmdline',
+      'L3MON4D3/LuaSnip',
+      'saadparwaiz1/cmp_luasnip',
+    }
+  }
 
   -- themes and syntax highlighting
-  use 'nvim-treesitter/nvim-treesitter'
+  use {
+    'nvim-treesitter/nvim-treesitter',
+    run = function()
+      pcall(require('nvim-treesitter.install').update { with_sync = true })
+    end,
+  }
+  use { -- Additional text objects via treesitter
+    'nvim-treesitter/nvim-treesitter-textobjects',
+    after = 'nvim-treesitter',
+  }
   use 'sheerun/vim-polyglot'
   use 'tjdevries/colorbuddy.nvim'
   use 'tjdevries/gruvbuddy.nvim'
@@ -60,12 +80,9 @@ local packer = require('packer').startup(function(use)
     },
   }
 
-  if packer_bootstrap and lua_lsp_boostrap then
+  if packer_bootstrap then
     require('packer').sync()
   end
 end)
 
-return {
-  packer = packer,
-  lua_exe = lua_exe,
-}
+return packer
