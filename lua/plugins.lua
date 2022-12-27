@@ -13,24 +13,7 @@ local ensure_packer = function()
   return false
 end
 
-local install_path = fn.expand('$HOME/.local/luals/')
-local lua_exe = install_path..'bin/lua-language-server'
-local lua_lsp_version = '3.6.4'
-
-local ensure_lua_lsp = function()
-  local url = 'https://github.com/sumneko/lua-language-server/releases/download/'..lua_lsp_version..'/'
-  local tar = 'lua-language-server-'..lua_lsp_version..'-linux-x64.tar.gz'
-  if fn.empty(fn.glob(lua_exe)) > 0 then
-    fn.system({ 'mkdir', '-p', install_path })
-    fn.system({ 'wget',  url..tar, '-P', install_path })
-    fn.system({ 'tar', '-C', install_path, '-xvf', install_path..'/'..tar })
-    return true
-  end
-  return false
-end
-
 local packer_bootstrap = ensure_packer()
-local lua_lsp_boostrap = ensure_lua_lsp()
 
 local packer = require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
@@ -79,6 +62,8 @@ local packer = require('packer').startup(function(use)
       'nvim-tree/nvim-web-devicons', -- optional, for file icons
     },
   }
+
+  use 'tpope/vim-sleuth' -- Detect tabstop and shiftwidth automatically
 
   if packer_bootstrap then
     require('packer').sync()
