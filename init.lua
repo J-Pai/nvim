@@ -1,6 +1,7 @@
 require('plugins')
 
 require('mason').setup()
+require('fidget').setup()
 
 -- Theme
 require('colorbuddy').colorscheme('gruvbuddy')
@@ -9,16 +10,14 @@ require('colorbuddy').colorscheme('gruvbuddy')
 require('tree-config')
 
 -- LSP Configuration
-local lspconfig = require('lspconfig')
 local mason_lspconfig = require('mason-lspconfig')
-lspconfig.pylsp.setup({})
-lspconfig.luau_lsp.setup({})
 
 -- Configure autocomplete after LSP configuration
 require('cmp-config')
 
 -- Set up lspconfig.
 require('neodev').setup()
+
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
 
@@ -34,18 +33,18 @@ local servers = {
 }
 
 mason_lspconfig.setup({
-  ensure_installed = vim.tbl_keys(servers),
-})
+    ensure_installed = vim.tbl_keys(servers),
+  })
 
 mason_lspconfig.setup_handlers({
-  function(server_name)
-    require('lspconfig')[server_name].setup({
-      capabilities = capabilities,
-      on_attach = require('lsp-config').on_attach,
-      settings = servers[server_name],
-    })
-  end,
-})
+    function(server_name)
+      require('lspconfig')[server_name].setup({
+          capabilities = capabilities,
+          on_attach = require('lsp-config').on_attach,
+          settings = servers[server_name],
+        })
+    end,
+  })
 
 -- General Configuration
 vim.opt.clipboard = 'unnamedplus' -- shared system clipboard

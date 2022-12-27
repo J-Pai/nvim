@@ -1,4 +1,5 @@
 local cmp = require('cmp')
+local luasnip = require('luasnip')
 
 local has_words_before = function()
   local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -17,23 +18,29 @@ end
 local tab_select = function(fallback)
   if cmp.visible() then
     cmp.select_next_item()
+  elseif luasnip.expand_or_jumpable() then
+    luasnip.expand_or_jump()
   elseif has_words_before() then
     cmp.complete()
   else
-    fallback() -- The fallback function sends a already mapped key. In this case, it's probably `<Tab>`.
+    fallback()
   end
 end
 
-local shift_tab_select = function()
+local shift_tab_select = function(fallback)
   if cmp.visible() then
     cmp.select_prev_item()
+  elseif luasnip.jumpable(-1) then
+    luasnip.jump(-1)
+  else
+    fallback()
   end
 end
 
 cmp.setup({
     snippet = {
       expand = function(args)
-        require('snippy').expand_snippet(args.body)
+        luasnip.lsp_expand(args.body)
       end,
     },
     window = {
@@ -45,12 +52,16 @@ cmp.setup({
         ['<C-f>'] = cmp.mapping.scroll_docs(4),
         ['<C-Space>'] = cmp.mapping.complete({}),
         ['<C-e>'] = cmp.mapping.abort(),
-        ['<CR>'] = cmp.mapping.confirm({ select = true }),
+        ['<CR>'] = cmp.mapping.confirm({
+          behavior = cmp.ConfirmBehavior.Replace,
+          select = true
+        }),
         ['<Tab>'] = cmp.mapping(tab_select, {'i', 's'}),
         ['<S-Tab>'] = cmp.mapping(shift_tab_select, {'i', 's'}),
       }),
     sources = cmp.config.sources({
         { name = 'nvim_lsp' },
+        { name = 'luasnip' },
       }, {
         { name = 'buffer' },
       }),
