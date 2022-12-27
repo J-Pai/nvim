@@ -28,7 +28,7 @@ local packer = require('packer').startup(function(use)
       'folke/neodev.nvim'
     },
   }
-  use 'anott03/nvim-lspinstall'
+
   use {
     'hrsh7th/nvim-cmp',
     requires = {
@@ -51,7 +51,8 @@ local packer = require('packer').startup(function(use)
     'nvim-treesitter/nvim-treesitter-textobjects',
     after = 'nvim-treesitter',
   }
-  use 'sheerun/vim-polyglot'
+  use 'tpope/vim-sleuth'
+
   use 'tjdevries/colorbuddy.nvim'
   use 'tjdevries/gruvbuddy.nvim'
 
@@ -62,8 +63,6 @@ local packer = require('packer').startup(function(use)
       'nvim-tree/nvim-web-devicons', -- optional, for file icons
     },
   }
-
-  use 'tpope/vim-sleuth' -- Detect tabstop and shiftwidth automatically
 
   if packer_bootstrap then
     require('packer').sync()
