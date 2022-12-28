@@ -46,6 +46,10 @@ mason_lspconfig.setup_handlers({
     end,
   })
 
+require('nvim-treesitter.configs').setup({
+  ensure_installed = { 'python', 'c', 'cpp', 'lua', 'help' }
+})
+
 -- General Configuration
 vim.opt.clipboard = 'unnamedplus' -- shared system clipboard
 
