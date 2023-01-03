@@ -8,20 +8,20 @@ vim.opt.termguicolors = true
 tree.setup()
 
 tree.setup({
-    sort_by = 'case_sensitive',
-    view = {
-      mappings = {
-        list = {
-          { key = 'u', action = 'dir_up' },
-        },
+  sort_by = 'case_sensitive',
+  view = {
+    mappings = {
+      list = {
+        { key = 'u', action = 'dir_up' },
       },
     },
-    renderer = {
-      group_empty = true,
-    },
-    filters = {
-      dotfiles = false,
-    },
-  })
+  },
+  renderer = {
+    group_empty = true,
+  },
+  filters = {
+    dotfiles = false,
+  },
+})
 
 return tree

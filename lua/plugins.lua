@@ -1,12 +1,12 @@
 local fn = vim.fn
 
 local ensure_packer = function()
-  local install_path = fn.stdpath('data')..'/site/pack/packer/start/packer.nvim'
+  local install_path = fn.stdpath('data') .. '/site/pack/packer/start/packer.nvim'
   if fn.empty(fn.glob(install_path)) > 0 then
     fn.system({
-        'git', 'clone', '--depth', '1',
-        'https://github.com/wbthomason/packer.nvim', install_path
-      })
+      'git', 'clone', '--depth', '1',
+      'https://github.com/wbthomason/packer.nvim', install_path
+    })
     vim.cmd [[packadd packer.nvim]]
     return true
   end
@@ -47,10 +47,13 @@ local packer = require('packer').startup(function(use)
       pcall(require('nvim-treesitter.install').update { with_sync = true })
     end,
   }
-  use { -- Additional text objects via treesitter
+
+  -- Additional text objects via treesitter
+  use {
     'nvim-treesitter/nvim-treesitter-textobjects',
     after = 'nvim-treesitter',
   }
+
   use 'tpope/vim-sleuth'
 
   use 'tjdevries/colorbuddy.nvim'

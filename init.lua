@@ -33,18 +33,18 @@ local servers = {
 }
 
 mason_lspconfig.setup({
-    ensure_installed = vim.tbl_keys(servers),
-  })
+  ensure_installed = vim.tbl_keys(servers),
+})
 
 mason_lspconfig.setup_handlers({
-    function(server_name)
-      require('lspconfig')[server_name].setup({
-          capabilities = capabilities,
-          on_attach = require('lsp-config').on_attach,
-          settings = servers[server_name],
-        })
-    end,
-  })
+  function(server_name)
+    require('lspconfig')[server_name].setup({
+      capabilities = capabilities,
+      on_attach = require('lsp-config').on_attach,
+      settings = servers[server_name],
+    })
+  end,
+})
 
 require('nvim-treesitter.configs').setup({
   ensure_installed = { 'python', 'c', 'cpp', 'lua', 'help' }
