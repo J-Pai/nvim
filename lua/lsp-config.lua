@@ -3,7 +3,13 @@ local on_attach = function(_, bufnr)
     if desc then
       desc = 'LSP: ' .. desc
     end
+
+    vim.keymap.set('n', keys, func, { buffer = bufnr, desc = desc })
   end
+
+  nmap('gd', vim.lsp.buf.definition, '[g]oto [d]efinition')
+  nmap('gI', vim.lsp.buf.definition, '[g]oto [I]mplementation')
+  nmap('gD', vim.lsp.buf.definition, '[g]oto [D]eclaration')
 
   vim.api.nvim_buf_create_user_command(bufnr, 'Format', function(_)
     vim.lsp.buf.format()
