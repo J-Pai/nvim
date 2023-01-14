@@ -67,6 +67,9 @@ local packer = require('packer').startup(function(use)
     },
   }
 
+  -- Copy over SSH
+  use {'ojroques/nvim-osc52'}
+
   if packer_bootstrap then
     require('packer').sync()
   end

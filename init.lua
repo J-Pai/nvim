@@ -18,6 +18,9 @@ require('cmp-config')
 -- Set up lspconfig.
 require('neodev').setup()
 
+-- Set up osc52 support
+require('osc52-config')
+
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
 
