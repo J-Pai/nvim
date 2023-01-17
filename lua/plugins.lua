@@ -1,6 +1,9 @@
 local fn = vim.fn
 
 local ensure_packer = function()
+  if os.getenv("PVIM") then
+    return true
+  end
   local install_path = fn.stdpath('data') .. '/site/pack/packer/start/packer.nvim'
   if fn.empty(fn.glob(install_path)) > 0 then
     fn.system({
@@ -70,7 +73,7 @@ local packer = require('packer').startup(function(use)
   -- Copy over SSH
   use {'ojroques/nvim-osc52'}
 
-  if packer_bootstrap then
+  if not os.getenv("PVIM") and packer_bootstrap then
     require('packer').sync()
   end
 end)
