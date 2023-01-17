@@ -7,3 +7,9 @@ Lua based neovim config.
 ```
 sudo apt install python3-venv
 ```
+
+## Portable Directory
+
+For use in a network restricted environment:
+
+https://github.com/RoryNesbitt/pvim
