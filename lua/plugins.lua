@@ -50,6 +50,8 @@ local packer = require('packer').startup(function(use)
       pcall(require('nvim-treesitter.install').update { with_sync = true })
     end,
   }
+  use 'google/vim-maktaba'
+  use 'bazelbuild/vim-bazel'
 
   -- Additional text objects via treesitter
   use {
