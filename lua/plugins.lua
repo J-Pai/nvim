@@ -60,6 +60,7 @@ local packer = require('packer').startup(function(use)
   }
 
   use 'tpope/vim-sleuth'
+  use 'f-person/git-blame.nvim'
 
   use 'tjdevries/colorbuddy.nvim'
   use 'tjdevries/gruvbuddy.nvim'
