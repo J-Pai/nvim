@@ -9,8 +9,7 @@ local ensure_packer = function()
     fn.system({
       'git', 'clone', '--depth', '1',
       'https://github.com/wbthomason/packer.nvim', install_path
-    })
-    vim.cmd [[packadd packer.nvim]]
+    }) vim.cmd [[packadd packer.nvim]]
     return true
   end
   return false
@@ -60,7 +59,7 @@ local packer = require('packer').startup(function(use)
   }
 
   use 'tpope/vim-sleuth'
-  use 'f-person/git-blame.nvim'
+  use 'tpope/vim-fugitive'
 
   use 'tjdevries/colorbuddy.nvim'
   use 'tjdevries/gruvbuddy.nvim'
@@ -74,7 +73,19 @@ local packer = require('packer').startup(function(use)
   }
 
   -- Copy over SSH
-  use {'ojroques/nvim-osc52'}
+  use { 'ojroques/nvim-osc52' }
+
+  -- Terminal
+  use {
+    'akinsho/toggleterm.nvim',
+    tag = '*',
+  }
+  use {
+    'mhinz/neovim-remote',
+    run = function()
+      fn.system({'python3', '-m', 'pip', 'install', 'neovim-remote'})
+    end,
+  }
 
   if not os.getenv("PVIM") and packer_bootstrap then
     require('packer').sync()
