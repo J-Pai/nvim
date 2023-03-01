@@ -64,6 +64,11 @@ local packer = require('packer').startup(function(use)
   use 'tjdevries/colorbuddy.nvim'
   use 'tjdevries/gruvbuddy.nvim'
 
+  use {
+    'nvim-lualine/lualine.nvim',
+    requires = { 'kyazdani42/nvim-web-devicons', opt = true }
+  }
+
   -- File explorer
   use {
     'nvim-tree/nvim-tree.lua',

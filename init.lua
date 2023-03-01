@@ -3,6 +3,9 @@ require('plugins')
 require('mason').setup()
 require('fidget').setup()
 
+-- Set up terminal
+require('terminal')
+
 -- Theme
 require('colorbuddy').colorscheme('gruvbuddy')
 
@@ -21,8 +24,7 @@ require('neodev').setup()
 -- Set up osc52 support
 require('osc52-config')
 
--- Set up terminal
-require('terminal')
+require('lualine').setup()
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
