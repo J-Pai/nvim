@@ -24,7 +24,7 @@ require('neodev').setup()
 -- Set up osc52 support
 require('osc52-config')
 
-require('lualine').setup()
+require('lualine').setup({})
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
@@ -60,6 +60,7 @@ require('nvim-treesitter.configs').setup({
 
 -- General Configuration
 vim.opt.clipboard = 'unnamedplus' -- shared system clipboard
+vim.opt.wrap = false
 
 vim.opt.colorcolumn = { 80 }
 vim.api.nvim_set_hl(0, 'ColorColumn', { bg = 'black' })
@@ -70,4 +71,3 @@ vim.opt.splitright = true
 vim.opt.list = true
 vim.opt.listchars = { tab = '> ', trail = '·', eol = '¬' }
 Whitespace = require('whitespace')
-

@@ -9,7 +9,8 @@ local ensure_packer = function()
     fn.system({
       'git', 'clone', '--depth', '1',
       'https://github.com/wbthomason/packer.nvim', install_path
-    }) vim.cmd [[packadd packer.nvim]]
+    })
+    vim.cmd [[packadd packer.nvim]]
     return true
   end
   return false
@@ -88,7 +89,7 @@ local packer = require('packer').startup(function(use)
   use {
     'mhinz/neovim-remote',
     run = function()
-      fn.system({'python3', '-m', 'pip', 'install', 'neovim-remote'})
+      fn.system({ 'python3', '-m', 'pip', 'install', 'neovim-remote' })
     end,
   }
 

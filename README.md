@@ -23,5 +23,6 @@ if [ -n "${NVIM_LISTEN_ADDRESS+x}" ]; then
   alias vimx='nvr -o' # Open file in horizontal split
   alias vim='nvr -O' # Open file in vertical split
   alias vimt='nvr --remote-tab' # Open file in new tab
+  export GIT_EDITOR='nvr -cc split --remote-wait'
 fi
 ```
