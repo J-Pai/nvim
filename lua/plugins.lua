@@ -32,6 +32,12 @@ local packer = require('packer').startup(function(use)
     },
   }
 
+
+  use {
+    "folke/trouble.nvim",
+    requires = "nvim-tree/nvim-web-devicons",
+  }
+
   use {
     'hrsh7th/nvim-cmp',
     requires = {
