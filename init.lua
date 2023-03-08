@@ -73,3 +73,5 @@ vim.opt.splitright = true
 vim.opt.list = true
 vim.opt.listchars = { tab = '> ', trail = '·', eol = '¬' }
 Whitespace = require('whitespace')
+
+vim.api.nvim_set_keymap('v', 'p', '"_dP', { noremap = true })
