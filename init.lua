@@ -40,6 +40,7 @@ local servers = {
       telemetry = { enable = false },
     },
   },
+  rust_analyzer = {},
 }
 
 mason_lspconfig.setup({
