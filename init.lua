@@ -58,7 +58,7 @@ mason_lspconfig.setup_handlers({
 })
 
 require('nvim-treesitter.configs').setup({
-  ensure_installed = { 'python', 'c', 'cpp', 'lua', 'help' }
+  ensure_installed = { 'python', 'c', 'cpp', 'lua' }
 })
 
 -- General Configuration
