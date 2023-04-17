@@ -19,7 +19,9 @@ https://github.com/RoryNesbitt/pvim
 This is used to prevent nested nvim sessions. Add the following to ~/.bashrc
 
 ```bash
-if [ -n "${NVIM_LISTEN_ADDRESS+x}" ]; then
+alias vim=nvim --remote /tmp/nvimsocket
+
+if [ -n "${NVIM}" ]; then
   alias vimx='nvr -o' # Open file in horizontal split
   alias vim='nvr -O' # Open file in vertical split
   alias vimt='nvr --remote-tab' # Open file in new tab
