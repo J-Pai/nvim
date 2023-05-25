@@ -5,17 +5,12 @@ vim.g.loaded_netrwPlugin = 1;
 
 vim.opt.termguicolors = true
 
-tree.setup()
+local function on_attach(_)
+end
 
 tree.setup({
   sort_by = 'case_sensitive',
-  view = {
-    mappings = {
-      list = {
-        { key = 'u', action = 'dir_up' },
-      },
-    },
-  },
+  on_attach = on_attach,
   renderer = {
     group_empty = true,
   },
