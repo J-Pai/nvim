@@ -21,13 +21,17 @@ local packer_bootstrap = ensure_packer()
 local packer = require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
 
+  use {
+    'j-hui/fidget.nvim',
+    tag = 'legacy',
+  }
+
   -- nvim LSP
   use {
     'neovim/nvim-lspconfig',
     requires = {
       'williamboman/mason.nvim',
       'williamboman/mason-lspconfig.nvim',
-      'j-hui/fidget.nvim',
       'folke/neodev.nvim'
     },
   }

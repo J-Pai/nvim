@@ -15,7 +15,7 @@ tree.setup({
     group_empty = true,
   },
   filters = {
-    dotfiles = false,
+    dotfiles = true,
   },
 })
 

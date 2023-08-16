@@ -9,9 +9,6 @@ require('terminal')
 -- Theme
 require('colorbuddy').colorscheme('gruvbuddy')
 
--- File explorer
-require('tree-config')
-
 -- LSP Configuration
 local mason_lspconfig = require('mason-lspconfig')
 
@@ -76,3 +73,5 @@ Whitespace = require('whitespace')
 
 vim.api.nvim_set_keymap('v', 'p', '"_dP', { noremap = true })
 vim.opt.hidden = false
+
+vim.lsp.set_log_level('debug')
