@@ -73,5 +73,3 @@ Whitespace = require('whitespace')
 
 vim.api.nvim_set_keymap('v', 'p', '"_dP', { noremap = true })
 vim.opt.hidden = false
-
-vim.lsp.set_log_level('debug')
