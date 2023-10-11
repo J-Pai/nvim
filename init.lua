@@ -38,6 +38,7 @@ local servers = {
     },
   },
   rust_analyzer = {},
+  tsserver = {},
 }
 
 mason_lspconfig.setup({
@@ -55,7 +56,7 @@ mason_lspconfig.setup_handlers({
 })
 
 require('nvim-treesitter.configs').setup({
-  ensure_installed = { 'python', 'c', 'cpp', 'lua' }
+  ensure_installed = { 'python', 'c', 'cpp', 'lua', 'typescript' }
 })
 
 -- General Configuration
