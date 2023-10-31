@@ -37,8 +37,17 @@ local servers = {
       telemetry = { enable = false },
     },
   },
-  rust_analyzer = {},
-  tsserver = {},
+  rust_analyzer = {
+    cargo = {
+      buildScripts = {
+        enable = true,
+      },
+    },
+  },
+  tsserver = {
+    filetypes = { "typescript", "typescriptreact", "typescript.tsx" },
+    cmd = { "typescript-language-server", "--stdio" }
+  },
 }
 
 mason_lspconfig.setup({
