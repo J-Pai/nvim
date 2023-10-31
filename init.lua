@@ -69,6 +69,8 @@ require('nvim-treesitter.configs').setup({
 })
 
 -- General Configuration
+vim.opt.updatetime = 250
+
 vim.opt.clipboard = 'unnamedplus' -- shared system clipboard
 
 vim.opt.colorcolumn = { 80 }
