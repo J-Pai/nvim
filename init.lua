@@ -8,6 +8,8 @@ require('terminal')
 
 -- Theme
 require('colorbuddy').colorscheme('gruvbuddy')
+require('lualine').setup()
+
 
 -- LSP Configuration
 local mason_lspconfig = require('mason-lspconfig')
@@ -21,9 +23,7 @@ require('neodev').setup()
 -- Set up osc52 support
 require('osc52-config')
 
-require('lualine').setup({})
-
-require("trouble").setup({})
+require("trouble").setup()
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)

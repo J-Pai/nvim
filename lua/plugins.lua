@@ -48,6 +48,7 @@ local packer = require('packer').startup(function(use)
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-buffer',
       'hrsh7th/cmp-cmdline',
+      'hrsh7th/cmp-path',
       'L3MON4D3/LuaSnip',
       'saadparwaiz1/cmp_luasnip',
     }
@@ -73,7 +74,6 @@ local packer = require('packer').startup(function(use)
   use 'tpope/vim-fugitive'
 
   use 'tjdevries/colorbuddy.nvim'
-  use 'tjdevries/gruvbuddy.nvim'
 
   use {
     'nvim-lualine/lualine.nvim',
@@ -96,11 +96,17 @@ local packer = require('packer').startup(function(use)
     'akinsho/toggleterm.nvim',
     tag = '*',
   }
+
   use {
     'mhinz/neovim-remote',
     run = function()
       fn.system({ 'python3', '-m', 'pip', 'install', 'neovim-remote' })
     end,
+  }
+
+  use {
+    "iamcco/markdown-preview.nvim",
+    run = function() vim.fn["mkdp#util#install"]() end,
   }
 
   if not os.getenv("PVIM") and packer_bootstrap then
