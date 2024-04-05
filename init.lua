@@ -75,6 +75,8 @@ vim.opt.clipboard = 'unnamedplus' -- shared system clipboard
 
 vim.opt.colorcolumn = { 80 }
 vim.api.nvim_set_hl(0, 'ColorColumn', { bg = 'black' })
+vim.api.nvim_set_hl(0, 'Normal', { bg = 'none' })
+vim.api.nvim_set_hl(0, 'NonText', { bg = 'none' })
 
 vim.opt.splitbelow = true
 vim.opt.splitright = true
