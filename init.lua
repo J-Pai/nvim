@@ -44,10 +44,6 @@ local servers = {
       },
     },
   },
-  tsserver = {
-    filetypes = { "typescript", "typescriptreact", "typescript.tsx" },
-    cmd = { "typescript-language-server", "--stdio" }
-  },
 }
 
 mason_lspconfig.setup({
