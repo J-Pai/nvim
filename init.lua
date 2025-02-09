@@ -8,8 +8,9 @@ require('terminal')
 
 -- Theme
 require('colorbuddy').colorscheme('gruvbuddy')
-require('lualine').setup()
-
+require('lualine').setup {
+  options = { theme = 'wombat' }
+}
 
 -- LSP Configuration
 local mason_lspconfig = require('mason-lspconfig')
@@ -46,11 +47,11 @@ local servers = {
   },
 }
 
-mason_lspconfig.setup({
+mason_lspconfig.setup {
   ensure_installed = vim.tbl_keys(servers),
-})
+}
 
-mason_lspconfig.setup_handlers({
+mason_lspconfig.setup_handlers {
   function(server_name)
     require('lspconfig')[server_name].setup({
       capabilities = capabilities,
@@ -58,11 +59,13 @@ mason_lspconfig.setup_handlers({
       settings = servers[server_name],
     })
   end,
-})
+}
 
-require('nvim-treesitter.configs').setup({
-  ensure_installed = { 'python', 'c', 'cpp', 'lua', 'typescript' }
-})
+require('nvim-treesitter.configs').setup {
+  ensure_installed = { 'python', 'c', 'cpp', 'lua', 'typescript', 'rust' },
+  auto_install = true,
+  highlight = { enable = true },
+}
 
 -- General Configuration
 vim.opt.updatetime = 250
