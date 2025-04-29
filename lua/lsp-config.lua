@@ -8,8 +8,10 @@ local on_attach = function(_, bufnr)
   end
 
   nmap('gd', vim.lsp.buf.definition, '[g]oto [d]efinition')
-  nmap('gI', vim.lsp.buf.definition, '[g]oto [I]mplementation')
-  nmap('gD', vim.lsp.buf.definition, '[g]oto [D]eclaration')
+  nmap('gI', vim.lsp.buf.implementation, '[g]oto [I]mplementation')
+  nmap('gD', vim.lsp.buf.declaration, '[g]oto [D]eclaration')
+  nmap('gR', vim.lsp.buf.references, '[g]oto [R]eferences')
+  nmap('gy', vim.lsp.buf.type_definition, '[g]oto t[y]pe definition')
 
   vim.api.nvim_buf_create_user_command(bufnr, 'Format', function(_)
     vim.lsp.buf.format()
