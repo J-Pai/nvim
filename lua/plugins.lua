@@ -23,7 +23,6 @@ local packer = require('packer').startup(function(use)
 
   use {
     'j-hui/fidget.nvim',
-    tag = 'legacy',
   }
 
   -- nvim LSP

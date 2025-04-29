@@ -16,15 +16,21 @@ https://github.com/RoryNesbitt/pvim
 
 ## Neovim Remote
 
+First setup a venv for neovim-remote.
+
+```bash
+cd ~/.config/nvim
+python3 -m venv venv
+./venv/bin/pip install neovim-remote
+```
+
 This is used to prevent nested nvim sessions. Add the following to ~/.bashrc
 
 ```bash
-alias vim=nvim --remote /tmp/nvimsocket
-
 if [ -n "${NVIM}" ]; then
-  alias vimx='nvr -o' # Open file in horizontal split
-  alias vim='nvr -O' # Open file in vertical split
-  alias vimt='nvr --remote-tab' # Open file in new tab
-  export GIT_EDITOR='nvr -cc split --remote-wait'
+  alias vimx='~/.config/nvim/venv/bin/nvr -o' # Open file in horizontal split
+  alias vim='~/.config/nvim/venv/bin/nvr -O' # Open file in vertical split
+  alias vimt='~/.config/nvim/venv/bin/nvr --remote-tab' # Open file in new tab
+  export GIT_EDITOR='~/.config/nvim/venv/bin/nvr -cc split --remote-wait'
 fi
 ```
