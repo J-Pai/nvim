@@ -28,6 +28,7 @@ require("trouble").setup()
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
+--  local rust_root_dir = require('lspconfig.util').root_pattern("rust-project.json")()
 
 local servers = {
   clangd = {},
@@ -44,6 +45,7 @@ local servers = {
         enable = true,
       },
     },
+    discoverProjects = false,
   },
 }
 
@@ -79,6 +81,7 @@ vim.api.nvim_set_hl(0, 'NonText', { bg = 'none' })
 
 vim.opt.splitbelow = true
 vim.opt.splitright = true
+vim.opt.number = true
 
 vim.opt.list = true
 vim.opt.listchars = { tab = '> ', trail = '·', eol = '¬' }
