@@ -59,6 +59,18 @@ mason_lspconfig.setup_handlers {
       capabilities = capabilities,
       on_attach = require('lsp-config').on_attach,
       settings = servers[server_name],
+      commands = {
+        RustExpandMacro = {
+          function()
+            vim.lsp.buf_request_all(
+              0,
+              "rust-analyzer/expandMacro",
+              vim.lsp.util.make_position_params(),
+              vim.print
+            )
+          end
+        }
+      }
     })
   end,
 }
