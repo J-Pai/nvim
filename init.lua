@@ -101,3 +101,4 @@ Whitespace = require('whitespace')
 
 vim.api.nvim_set_keymap('v', 'p', '"_dP', { noremap = true })
 vim.opt.hidden = false
+vim.g._ts_force_sync_parsing = true
