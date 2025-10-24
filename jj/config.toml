@@ -7,7 +7,8 @@ editor = "vim"
 
 [templates]
 commit_trailers = '''
-if(!trailers.contains_key("Change-Id"),
+if(self.parents().any(|x| x.trailers().contains_key("Change-Id")) &&
+  !trailers.contains_key("Change-Id"),
   format_gerrit_change_id_trailer(self)
 )
 '''
