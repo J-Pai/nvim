@@ -1,6 +1,9 @@
 # NeoVim Config
 
-Lua based neovim config.
+Lua based neovim config. 
+
+Now based on https://github.com/nvim-lua/kickstart.nvim/tree/master.
+- Follow kickstart's README.md for installations.
 
 ## Dependencies
 
