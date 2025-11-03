@@ -219,6 +219,24 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+-- Removes trailing whitespace on buffer write.
+vim.api.nvim_create_autocmd({ "BufWritePre" }, {
+  pattern = { "*" }, -- Apply to all file types
+  callback = function(ev)
+    -- Save current cursor position to restore it after cleaning
+    local curpos = vim.api.nvim_win_get_cursor(0)
+    -- Execute a substitution command to remove trailing whitespace
+    -- %s/\\s\\+$//e:
+    --   %s: Substitute command across the entire file
+    --   \\s\\+$: Matches one or more whitespace characters (space, tab) at the end of a line
+    --   //: Replace with nothing
+    --   e: Suppress error if no match is found
+    vim.cmd([[keeppatterns %s/\s\+$//e]])
+    -- Restore cursor position
+    vim.api.nvim_win_set_cursor(0, curpos)
+  end,
+})
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -716,6 +734,14 @@ require('lazy').setup({
             },
           },
         },
+
+        pylsp = {
+          settings = {
+            env = {
+              PYTHONPATH = vim.env.PYTHONPATH,
+            }
+          }
+        }
       }
 
       -- Ensure the servers and tools above are installed
@@ -767,6 +793,21 @@ require('lazy').setup({
         mode = '',
         desc = '[F]ormat buffer',
       },
+      {
+        '<leader>tf',
+        function()
+          -- If autoformat is currently disabled for this buffer,
+          -- then enable it, otherwise disable it
+          if vim.b.disable_autoformat then
+            vim.cmd 'FormatEnable'
+            vim.notify 'Enabled autoformat for current buffer'
+          else
+            vim.cmd 'FormatDisable!'
+            vim.notify 'Disabled autoformat for current buffer'
+          end
+        end,
+        desc = 'Toggle autoformat for current buffer',
+      },
     },
     opts = {
       notify_on_error = false,
@@ -793,6 +834,27 @@ require('lazy').setup({
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
       },
     },
+    config = function()
+      vim.api.nvim_create_user_command('FormatDisable', function(args)
+        if args.bang then
+          -- :FormatDisable! disables autoformat for this buffer only
+          vim.b.disable_autoformat = true
+        else
+          -- :FormatDisable disables autoformat globally
+          vim.g.disable_autoformat = true
+        end
+      end, {
+        desc = 'Disable autoformat-on-save',
+        bang = true, -- allows the ! variant
+      })
+
+      vim.api.nvim_create_user_command('FormatEnable', function()
+        vim.b.disable_autoformat = false
+        vim.g.disable_autoformat = false
+      end, {
+        desc = 'Re-enable autoformat-on-save',
+      })
+    end,
   },
 
   { -- Autocompletion
