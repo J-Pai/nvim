@@ -3,7 +3,7 @@ name = "Jesse Pai"
 email = "jessepai@google.com"
 
 [ui]
-editor = "vim"
+editor = "nvim"
 
 [templates]
 commit_trailers = '''
