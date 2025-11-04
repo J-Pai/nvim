@@ -699,6 +699,8 @@ require('lazy').setup({
         -- pyright = {},
         rust_analyzer = {
           settings = {
+            -- Use the system installed rust-analyzer due to older projects being built.
+            cmd = { "rust-analzyer" },
             cargo = {
               features = 'all',
             },
