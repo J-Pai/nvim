@@ -1040,6 +1040,30 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
+  {
+    'ojroques/nvim-osc52',
+    config = function()
+      require('osc52').setup {
+        max_length = 0,
+        silent = false,
+        trim = true,
+        tmux_passthrough = true,
+      }
+
+      vim.keymap.set('n', '<leader>c', require('osc52').copy_operator, {
+        expr = true,
+        desc = 'osc52: [c]opy the given text to the clipboard',
+      })
+      vim.keymap.set('n', '<leader>cc', '<leader>c_', {
+        remap = true,
+        desc = 'osc52: [c]opy the [c]urrent line',
+      })
+      vim.keymap.set('v', '<leader>c', require('osc52').copy_visual, {
+        desc = 'osc52: [c]opy the current selection'
+      })
+    end,
+  }
+
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
