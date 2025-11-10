@@ -220,8 +220,8 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 })
 
 -- Removes trailing whitespace on buffer write.
-vim.api.nvim_create_autocmd({ "BufWritePre" }, {
-  pattern = { "*" }, -- Apply to all file types
+vim.api.nvim_create_autocmd({ 'BufWritePre' }, {
+  pattern = { '*' }, -- Apply to all file types
   callback = function(ev)
     -- Save current cursor position to restore it after cleaning
     local curpos = vim.api.nvim_win_get_cursor(0)
@@ -231,7 +231,7 @@ vim.api.nvim_create_autocmd({ "BufWritePre" }, {
     --   \\s\\+$: Matches one or more whitespace characters (space, tab) at the end of a line
     --   //: Replace with nothing
     --   e: Suppress error if no match is found
-    vim.cmd([[keeppatterns %s/\s\+$//e]])
+    vim.cmd [[keeppatterns %s/\s\+$//e]]
     -- Restore cursor position
     vim.api.nvim_win_set_cursor(0, curpos)
   end,
@@ -700,7 +700,7 @@ require('lazy').setup({
         rust_analyzer = {
           settings = {
             -- Use the system installed rust-analyzer due to older projects being built.
-            cmd = { "rust-analzyer" },
+            cmd = { 'rust-analzyer' },
             cargo = {
               features = 'all',
             },
@@ -741,9 +741,9 @@ require('lazy').setup({
           settings = {
             env = {
               PYTHONPATH = vim.env.PYTHONPATH,
-            }
-          }
-        }
+            },
+          },
+        },
       }
 
       -- Ensure the servers and tools above are installed
@@ -1052,17 +1052,17 @@ require('lazy').setup({
 
       vim.keymap.set('n', '<leader>c', require('osc52').copy_operator, {
         expr = true,
-        desc = 'osc52: [c]opy the given text to the clipboard',
+        desc = 'osc52: [C]opy the given text to the clipboard',
       })
       vim.keymap.set('n', '<leader>cc', '<leader>c_', {
         remap = true,
-        desc = 'osc52: [c]opy the [c]urrent line',
+        desc = 'osc52: [C]opy the [c]urrent line',
       })
       vim.keymap.set('v', '<leader>c', require('osc52').copy_visual, {
-        desc = 'osc52: [c]opy the current selection'
+        desc = 'osc52: [C]opy the current selection',
       })
     end,
-  }
+  },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
