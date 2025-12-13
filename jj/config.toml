@@ -12,3 +12,6 @@ if(self.parents().any(|x| x.trailers().contains_key("Change-Id")) &&
   format_gerrit_change_id_trailer(self)
 )
 '''
+
+[snapshot]
+max-new-file-size = 13984600
