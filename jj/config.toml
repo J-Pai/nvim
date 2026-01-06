@@ -14,4 +14,4 @@ if(self.parents().any(|x| x.trailers().contains_key("Change-Id")) &&
 '''
 
 [snapshot]
-max-new-file-size = 13984600
+max-new-file-size = "4GB"
