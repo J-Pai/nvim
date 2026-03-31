@@ -1,3 +1,4 @@
 venv/
 plugin/
+jj/repos/
 .luarc.json

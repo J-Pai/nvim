@@ -701,16 +701,6 @@ require('lazy').setup({
           settings = {
             -- Use the system installed rust-analyzer due to older projects being built.
             cmd = { 'rust-analzyer' },
-            cargo = {
-              features = 'all',
-            },
-            procMacro = {
-              ignored = {
-                leptos_macro = {
-                  'server',
-                },
-              },
-            },
           },
         },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
