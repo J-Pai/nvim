@@ -2,6 +2,11 @@
 name = "Jesse Pai"
 email = "jessepai@google.com"
 
+[[--scope]]
+--when.repositories = ["~/Documents/git"]
+[--scope.user]
+email = "jesse.pai@gmail.com"
+
 [ui]
 editor = "nvim"
 
