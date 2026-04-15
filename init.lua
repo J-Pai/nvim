@@ -699,9 +699,14 @@ require('lazy').setup({
         -- gopls = {},
         -- pyright = {},
         rust_analyzer = {
+          -- Use the system installed rust-analyzer due to older projects being built.
+          cmd = { 'rust-analyzer' },
           settings = {
-            -- Use the system installed rust-analyzer due to older projects being built.
-            cmd = { 'rust-analzyer' },
+            ["rust-analyzer"] = {
+              cargo = {
+                targetDir = true,
+              }
+            },
           },
         },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
