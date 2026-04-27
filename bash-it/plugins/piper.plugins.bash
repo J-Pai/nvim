@@ -50,9 +50,9 @@ function cl_linkify() {
 
 	if [[ $base_url =~ ^@?(cl/[0-9]+) ]]; then
 		base_url="${BASH_REMATCH[1]}"
-		echo -n "\e]8;;http://${base_url}\a${1}\e]8;;\a"
+		echo "\e]8;;http://${base_url}\a${1}\e]8;;\a"
 	else
-		echo -n "${1}"
+		echo "${1}"
 	fi
 }
 
