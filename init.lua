@@ -322,7 +322,7 @@ require('lazy').setup({
   -- Then, because we use the `opts` key (recommended), the configuration runs
   -- after the plugin has been loaded as `require(MODULE).setup(opts)`.
 
-  { -- Useful plugin to show you pending keybinds.
+  {                     -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     opts = {
@@ -403,7 +403,7 @@ require('lazy').setup({
       { 'nvim-telescope/telescope-ui-select.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      { 'nvim-tree/nvim-web-devicons',            enabled = vim.g.have_nerd_font },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -511,7 +511,7 @@ require('lazy').setup({
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
-      { 'j-hui/fidget.nvim', opts = {} },
+      { 'j-hui/fidget.nvim',    opts = {} },
 
       -- Allows extra capabilities provided by blink.cmp
       'saghen/blink.cmp',
@@ -802,16 +802,20 @@ require('lazy').setup({
         vim.lsp.enable 'lua_ls'
       end
 
+      local ciderlsp_settings = {
+        "enable_placeholders",                                 -- Enable completion placeholders (go/cider-v-lsp-features#code-completion).
+      }
+
       vim.lsp.config('ciderlsp', {
         cmd = {
           "/google/bin/releases/cider/ciderlsp/ciderlsp",
-          "--tooltag=neovim-lsp",
           "--noforward_sync_responses",
+          "--request_options=" .. table.concat(ciderlsp_settings, ","),
         },
         filetypes = { "c", "cpp", "java", "kotlin", "objc", "proto", "textpb", "go", "python", "bzl" },
         root_dir = function(bufnr, cb)
           local fname = vim.api.nvim_buf_get_name(bufnr)
-          local root_dir = "/google"
+          local root_dir = "/google/src/cloud"
           if vim.startswith(fname, root_dir) then
             cb(root_dir)
           end
@@ -820,8 +824,7 @@ require('lazy').setup({
       if citc(vim.api.nvim_buf_get_name(0)) ~= nil then
         vim.lsp.enable 'ciderlsp'
       end
-
-      end,
+    end,
   },
 
   { -- Autoformat
