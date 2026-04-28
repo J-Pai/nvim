@@ -8,6 +8,8 @@ SCM_CITC_CHAR='G3±'
 SCM_CITC_DETACHED_CHAR='⌿'
 SCM_CITC_AHEAD_CHAR="↑"
 SCM_CITC_NON_UPLOADED_CHAR="⇧"
+SCM_CITC_BEHIND_CHAR="↓"
+SCM_CITC_BEHIND_NON_UPLOADED_CHAR="⇩"
 SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR=" "
 SCM_CITC_UNTRACKED_CHAR="?:"
 SCM_CITC_UNSTAGED_CHAR="U:"
@@ -45,20 +47,8 @@ function scm_prompt_char() {
 	esac
 }
 
-function cl_linkify() {
-	local base_url="${1}"
-
-	if [[ $base_url =~ ^@?(cl/[0-9]+) ]]; then
-		base_url="${BASH_REMATCH[1]}"
-		echo "\e]8;;http://${base_url}\a${1}\e]8;;\a"
-	else
-		echo "${1}"
-	fi
-}
-
-function citc_prompt_vars() {
-	local start=$EPOCHREALTIME
-	local jj_query="$(jj log --no-graph -r p4head::@ -T '
+function jj_query() {
+	local template='
 if(current_working_copy,
   join(",",
     if(bookmarks.len() > 0,
@@ -76,13 +66,34 @@ if(current_working_copy,
   ),
   if(bookmarks.len() > 0,
     "-",
-    if(p4head,
+    if(p4head || p4base,
       "",
       "^"
     )
   )
-)
-')"
+)'
+	jj log --no-graph -r $1 -T "${template}"
+}
+
+function cl_linkify() {
+	local base_url="${1}"
+
+	if [[ $base_url =~ ^@?(cl/[0-9]+) ]]; then
+		base_url="${BASH_REMATCH[1]}"
+		echo "\e]8;;http://${base_url}\a${1}\e]8;;\a"
+	else
+		echo "${1}"
+	fi
+}
+
+function citc_prompt_vars() {
+	local start=$EPOCHREALTIME
+	local direction="up"
+	local jj_query="$(jj_query p4head::@)"
+	if [[ "${jj_query}" == "" ]]; then
+		local direction="down"
+		jj_query="$(jj_query p4base::@)"
+	fi
 	if [[ "${CITC_BENCHMARK}" != "" ]]; then
 		local duration="$(echo "scale=2; ($EPOCHREALTIME - $start)" | bc)s "
 	fi
@@ -106,12 +117,20 @@ if(current_working_copy,
 	SCM_BRANCH="$(basename $(jj workspace root))"
 
 	if [[ "${ahead}" -gt 0 ]]; then
-		SCM_BRANCH+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_AHEAD_CHAR}"
+		if [[ "${direction}" == "up" ]]; then
+			SCM_BRANCH+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_AHEAD_CHAR}"
+		else
+			SCM_BRANCH+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_BEHIND_CHAR}"
+		fi
 		SCM_BRANCH+="${ahead}"
 	fi
 
 	if [[ "${non_uploaded_ahead}" -gt 0 ]]; then
-		SCM_BRANCH+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_NON_UPLOADED_CHAR}"
+		if [[ "${direction}" == "up" ]]; then
+			SCM_BRANCH+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_NON_UPLOADED_CHAR}"
+		else
+			SCM_BRANCH+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_BEHIND_NON_UPLOADED_CHAR}"
+		fi
 		SCM_BRANCH+="${non_uploaded_ahead}"
 	fi
 
