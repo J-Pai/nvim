@@ -78,11 +78,17 @@ if(current_working_copy,
 function cl_linkify() {
 	local base_url="${1}"
 
-	if [[ $base_url =~ ^@?(cl/[0-9]+) ]]; then
+	if [[ $base_url =~ ^@?(cl/[0-9]+)\((p4head|p4base)\) ]]; then
 		base_url="${BASH_REMATCH[1]}"
-		echo "\e]8;;http://${base_url}\a${1}\e]8;;\a"
+		p4="${BASH_REMATCH[2]}"
+
+		if [[ "${p4}" != "" ]]; then
+			p4=" (${p4})"
+		fi
+
+		echo "http://${base_url}${p4}"
 	else
-		echo "${1}"
+		echo "http://${1}"
 	fi
 }
 
