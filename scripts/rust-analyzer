@@ -1,0 +1,4 @@
+#!/bin/bash
+
+~/.cargo/bin/rust-analyzer --version >| /tmp/rust-analyzer-version.txt
+~/.cargo/bin/rust-analyzer $@

@@ -703,7 +703,7 @@ require('lazy').setup({
         -- pyright = {},
         rust_analyzer = {
           -- Use the system installed rust-analyzer due to older projects being built.
-          cmd = { 'rust-analyzer' },
+          cmd = { vim.fn.expand('$HOME/.config/nvim/scripts/rust-analyzer') },
           settings = {
             ["rust-analyzer"] = {
               cargo = {
@@ -1065,7 +1065,8 @@ require('lazy').setup({
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
-    main = 'nvim-treesitter.configs', -- Sets main module to use for opts
+    branch = 'main',
+    -- main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
       ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
