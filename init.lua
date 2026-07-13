@@ -813,7 +813,7 @@ require('lazy').setup({
       end
 
       local ciderlsp_settings = {
-        "enable_placeholders",                                 -- Enable completion placeholders (go/cider-v-lsp-features#code-completion).
+        "enable_placeholders", -- Enable completion placeholders (go/cider-v-lsp-features#code-completion).
       }
 
       vim.lsp.config('ciderlsp', {
@@ -1159,6 +1159,15 @@ require('lazy').setup({
       'echasnovski/mini.pick',
       'folke/snacks.nvim',
     },
+  },
+  {
+    "nicolasgb/jj.nvim",
+    version = "*", -- Use latest stable release
+    -- Or from the main branch (uncomment the branch line and comment the version line)
+    -- branch = "main",
+    config = function()
+      require("jj").setup({})
+    end,
   }
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
