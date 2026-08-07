@@ -1168,7 +1168,38 @@ require('lazy').setup({
     config = function()
       require("jj").setup({})
     end,
-  }
+  },
+  { -- Adds Jujutsu related signs to the gutter
+    'evanphx/jjsigns.nvim',
+    config = function()
+      require('jjsigns').setup({
+        enabled = true,
+        signcolumn = true,
+        base = '@-',
+        signs = {
+          add          = { text = '+' },
+          change       = { text = '~' },
+          delete       = { text = '_' },
+          topdelete    = { text = '‾' },
+          changedelete = { text = '~' },
+        },
+      })
+
+      -- Link directly to GitSigns highlight groups for exact visual matching
+      local function link_highlights()
+        vim.api.nvim_set_hl(0, 'JjSignsAdd', { link = 'GitSignsAdd' })
+        vim.api.nvim_set_hl(0, 'JjSignsChange', { link = 'GitSignsChange' })
+        vim.api.nvim_set_hl(0, 'JjSignsDelete', { link = 'GitSignsDelete' })
+        vim.api.nvim_set_hl(0, 'JjSignsChangedelete', { link = 'GitSignsChangedelete' })
+        vim.api.nvim_set_hl(0, 'JjSignsTopdelete', { link = 'GitSignsTopdelete' })
+      end
+
+      link_highlights()
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        callback = link_highlights,
+      })
+    end,
+  },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
