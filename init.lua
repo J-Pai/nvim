@@ -627,7 +627,7 @@ require('lazy').setup({
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
             local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
-            vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
+            vim.api.nvim_create_autocmd({ 'CursorHold' }, {
               buffer = event.buf,
               group = highlight_augroup,
               callback = vim.lsp.buf.document_highlight,
@@ -773,17 +773,16 @@ require('lazy').setup({
       })
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-      local citc = require('lspconfig').util.root_pattern('.citc')
 
-      for name, server in pairs(servers) do
-        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-        vim.lsp.config(name, server)
-        if citc(vim.api.nvim_buf_get_name(0)) == nil then
-          vim.lsp.enable(name)
+      -- Helper to identify Google3 / CitC files
+      local function is_google_path(path)
+        if not path or path == '' then
+          return false
         end
+        return vim.startswith(path, '/google') or vim.fs.root(path, { '.citc' }) ~= nil
       end
 
-      -- Special Lua Config, as recommended by neovim help docs
+      -- Special Lua Config for lua_ls
       vim.lsp.config('lua_ls', {
         on_init = function(client)
           if client.workspace_folders then
@@ -798,9 +797,6 @@ require('lazy').setup({
             },
             workspace = {
               checkThirdParty = false,
-              -- NOTE: this is a lot slower and will cause issues when working on your own configuration.
-              --  See https://github.com/neovim/nvim-lspconfig/issues/3189
-              library = vim.api.nvim_get_runtime_file('', true),
             },
           })
         end,
@@ -808,32 +804,73 @@ require('lazy').setup({
           Lua = {},
         },
       })
-      if citc(vim.api.nvim_buf_get_name(0)) == nil then
-        vim.lsp.enable 'lua_ls'
+
+      -- Configure standard Mason servers: attach only to non-Google3 files
+      for name, server in pairs(servers) do
+        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+        local prev_root_dir = server.root_dir
+        server.root_dir = function(bufnr, cb)
+          local fname = vim.api.nvim_buf_get_name(bufnr)
+          if is_google_path(fname) then
+            return nil
+          end
+          if prev_root_dir then
+            return prev_root_dir(bufnr, cb)
+          end
+          cb(vim.fs.root(bufnr, { '.git', 'compile_commands.json', 'Cargo.toml', 'pyproject.toml', 'Makefile' }))
+        end
+        vim.lsp.config(name, server)
+        vim.lsp.enable(name)
       end
 
+      -- Configure CiderLSP for Google3 files (see go/ciderlsp-neovim)
       local ciderlsp_settings = {
-        "enable_placeholders", -- Enable completion placeholders (go/cider-v-lsp-features#code-completion).
+        'enable_placeholders', -- Enable completion placeholders (go/cider-v-lsp-features#code-completion).
+        'enable:inlay_hints_kotlin_show_local_variable_types',
       }
 
       vim.lsp.config('ciderlsp', {
         cmd = {
-          "/google/bin/releases/cider/ciderlsp/ciderlsp",
-          "--noforward_sync_responses",
-          "--request_options=" .. table.concat(ciderlsp_settings, ","),
+          '/google/bin/releases/cider/ciderlsp/ciderlsp',
+          '--tooltag=nvim-lsp',
+          '--noforward_sync_responses',
+          '--request_options=' .. table.concat(ciderlsp_settings, ','),
         },
-        filetypes = { "c", "cpp", "java", "kotlin", "objc", "proto", "textpb", "go", "python", "bzl" },
+        capabilities = capabilities,
+        filetypes = {
+          'borg',
+          'bzl',
+          'c',
+          'cpp',
+          'cs',
+          'dart',
+          'gcl',
+          'go',
+          'googlesql',
+          'graphql',
+          'java',
+          'kotlin',
+          'markdown',
+          'mlir',
+          'ncl',
+          'objc',
+          'patchpanel',
+          'proto',
+          'python',
+          'qflow',
+          'soy',
+          'swift',
+          'textpb',
+          'typescript',
+        },
         root_dir = function(bufnr, cb)
           local fname = vim.api.nvim_buf_get_name(bufnr)
-          local root_dir = "/google/src/cloud"
-          if vim.startswith(fname, root_dir) then
-            cb(root_dir)
+          if is_google_path(fname) then
+            cb '/google'
           end
         end,
       })
-      if citc(vim.api.nvim_buf_get_name(0)) ~= nil then
-        vim.lsp.enable 'ciderlsp'
-      end
+      vim.lsp.enable 'ciderlsp'
     end,
   },
 
@@ -1172,7 +1209,8 @@ require('lazy').setup({
   { -- Adds Jujutsu related signs to the gutter
     'evanphx/jjsigns.nvim',
     config = function()
-      require('jjsigns').setup({
+      local jjsigns = require('jjsigns')
+      jjsigns.setup({
         enabled = true,
         signcolumn = true,
         base = '@-',
@@ -1184,6 +1222,102 @@ require('lazy').setup({
           changedelete = { text = '~' },
         },
       })
+
+      -- Prevent jjsigns from executing blocking jj commands on every keystroke (TextChanged/TextChangedI).
+      -- Instead, update signs on buffer open (BufReadPost), save (BufWritePost), or on-demand refresh.
+      local attach = require('jjsigns.attach')
+      local jj = require('jjsigns.jj')
+      local signs = require('jjsigns.signs')
+      local api = vim.api
+
+      local function should_attach(bufnr)
+        if not api.nvim_buf_is_valid(bufnr) or vim.bo[bufnr].buftype ~= '' then
+          return false
+        end
+        local filepath = api.nvim_buf_get_name(bufnr)
+        return filepath ~= ''
+      end
+
+      local function update_buffer_signs(bufnr)
+        if not should_attach(bufnr) then
+          return
+        end
+
+        local filepath = api.nvim_buf_get_name(bufnr)
+        local file_dir = vim.fs.dirname(filepath)
+
+        if not jj.is_jj_repo(file_dir) then
+          return
+        end
+
+        local repo_root = jj.get_repo_root(file_dir)
+        if not repo_root then
+          return
+        end
+
+        local rel_path = filepath:sub(#repo_root + 2)
+        if not jj.is_file_tracked(rel_path, repo_root) then
+          return
+        end
+
+        signs.update_buffer_signs(bufnr, filepath, repo_root)
+      end
+
+      attach.attach_to_buffer = function(bufnr)
+        if not should_attach(bufnr) then
+          return
+        end
+
+        local filepath = api.nvim_buf_get_name(bufnr)
+        local file_dir = vim.fs.dirname(filepath)
+
+        if not jj.is_jj_repo(file_dir) then
+          return
+        end
+
+        local repo_root = jj.get_repo_root(file_dir)
+        if not repo_root then
+          return
+        end
+
+        local rel_path = filepath:sub(#repo_root + 2)
+        if not jj.is_file_tracked(rel_path, repo_root) then
+          return
+        end
+
+        local group = api.nvim_create_augroup('jjsigns_buffer_' .. bufnr, { clear = true })
+
+        -- Update on buffer write (saving)
+        api.nvim_create_autocmd('BufWritePost', {
+          group = group,
+          buffer = bufnr,
+          callback = function()
+            update_buffer_signs(bufnr)
+          end,
+        })
+
+        -- Cleanup on buffer unload
+        api.nvim_create_autocmd('BufUnload', {
+          group = group,
+          buffer = bufnr,
+          callback = function()
+            signs.clear_buffer(bufnr)
+          end,
+        })
+
+        -- Initial sign update on open
+        update_buffer_signs(bufnr)
+      end
+
+      attach.update_buffer = function(bufnr, _filepath)
+        update_buffer_signs(bufnr)
+      end
+
+      -- Manual refresh keymap: <leader>hr to refresh Jujutsu signs for current buffer
+      vim.keymap.set('n', '<leader>hr', function()
+        local bufnr = api.nvim_get_current_buf()
+        update_buffer_signs(bufnr)
+      end, { desc = 'Git/JJ [H]unk [R]efresh signs' })
 
       -- Link directly to GitSigns highlight groups for exact visual matching
       local function link_highlights()

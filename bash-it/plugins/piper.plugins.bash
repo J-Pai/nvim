@@ -22,7 +22,7 @@ function scm() {
 		SCM="${SCM_NONE-NONE}"
 	elif [[ -x "${GIT_EXE-}" ]] && _bash-it-find-in-ancestor '.git' > /dev/null; then
 		SCM="${SCM_GIT?}"
-	elif [[ -x "${JJ_EXE-}" ]] && _bash-it-find-in-ancestor '.citc' > /dev/null; then
+	elif [[ -x "${JJ_EXE-}" ]] && ([[ "$PWD" == /google/src/cloud/* ]] || _bash-it-find-in-ancestor '.citc' > /dev/null); then
 		SCM="${SCM_CITC?}"
 	else
 		SCM="${SCM_NONE-NONE}"
@@ -47,16 +47,41 @@ function scm_prompt_char() {
 	esac
 }
 
-function jj_query() {
-	local template='
+function _citc_workspace_name() {
+	if [[ "$PWD" =~ ^/google/src/cloud/[^/]+/([^/]+) ]]; then
+		echo "${BASH_REMATCH[1]}"
+	else
+		local ws="$(jj workspace root 2>/dev/null)"
+		echo "${ws##*/}"
+	fi
+}
+
+function _update_citc_cache_async() {
+	local ws_name="$1"
+	local cwd="$2"
+	local cache_file="/dev/shm/citc_prompt_${USER}_${ws_name}"
+	local lock_file="/dev/shm/citc_prompt_${USER}_${ws_name}.lock"
+
+	# Avoid spawning duplicate background jobs if one is already in flight
+	if [[ -f "$lock_file" ]]; then
+		local lock_age=$(( $(date +%s) - $(stat -c %Y "$lock_file" 2>/dev/null || echo 0) ))
+		if [[ $lock_age -lt 4 ]]; then
+			return
+		fi
+	fi
+	touch "$lock_file" 2>/dev/null
+
+	(
+		cd "$cwd" 2>/dev/null || exit
+		local template='
 if(current_working_copy,
   join(",",
     if(bookmarks.len() > 0,
-      "@" ++ bookmarks.first(),
+      "@" ++ bookmarks.first().name(),
       if(parents.first().p4head() && empty,
         "cl/" ++ parents.first().submitted_change_number() ++ "(p4head)",
         if(parents.first().bookmarks().len() > 0,
-          parents.first().bookmarks().first(),
+          parents.first().bookmarks().first().name(),
           "cl/*"
         )
       )
@@ -72,101 +97,101 @@ if(current_working_copy,
     )
   )
 )'
-	jj log --no-graph -r $1 -T "${template}"
-}
-
-function cl_linkify() {
-	local base_url="${1}"
-
-	if [[ $base_url =~ ^@?(cl/[0-9]+)\((p4head|p4base)\) ]]; then
-		base_url="${BASH_REMATCH[1]}"
-		p4="${BASH_REMATCH[2]}"
-
-		if [[ "${p4}" != "" ]]; then
-			p4=" (${p4})"
+		local jj_query="$(jj log --no-graph -r "p4head::@" -T "${template}" 2>/dev/null)"
+		local direction="up"
+		if [[ -z "${jj_query}" ]]; then
+			direction="down"
+			jj_query="$(jj log --no-graph -r "p4base::@" -T "${template}" 2>/dev/null)"
 		fi
 
-		echo "http://${base_url}${p4}"
-	else
-		echo "http://${1}"
-	fi
+		local tmp_caret="${jj_query//[^^]/}"
+		local non_uploaded_ahead="${#tmp_caret}"
+		local tmp_dash="${jj_query//[^-]/}"
+		local ahead=$(( ${#tmp_dash} + non_uploaded_ahead ))
+		jj_query="${jj_query//-/}"
+		jj_query="${jj_query//^/}"
+
+		IFS=',' read -r cl open_files conflicted_files <<< "${jj_query}"
+		local unstaged_files="0"
+		if [[ "${cl}" == "cl/*" ]]; then
+			unstaged_files="${open_files}"
+			open_files="0"
+		fi
+
+		local branch="${ws_name}"
+		if [[ ${ahead} -gt 0 ]]; then
+			if [[ "${direction}" == "up" ]]; then
+				branch+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_AHEAD_CHAR}${ahead}"
+			else
+				branch+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_BEHIND_CHAR}${ahead}"
+			fi
+		fi
+
+		if [[ ${non_uploaded_ahead} -gt 0 ]]; then
+			if [[ "${direction}" == "up" ]]; then
+				branch+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_NON_UPLOADED_CHAR}${non_uploaded_ahead}"
+			else
+				branch+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_BEHIND_NON_UPLOADED_CHAR}${non_uploaded_ahead}"
+			fi
+		fi
+
+		local dirty=""
+		local state=""
+		if [[ ${open_files:-0} -gt 0 || ${unstaged_files:-0} -gt 0 || ${conflicted_files:-0} -gt 0 ]]; then
+			if [[ ${open_files:-0} -gt 0 ]]; then
+				branch+=" ${SCM_CITC_STAGED_CHAR}${open_files}"
+				dirty=3
+			fi
+			if [[ ${unstaged_files:-0} -gt 0 ]]; then
+				branch+=" ${SCM_CITC_UNSTAGED_CHAR}${unstaged_files}"
+				dirty=2
+			fi
+			if [[ ${conflicted_files:-0} -gt 0 ]]; then
+				branch+=" ${SCM_CITC_UNTRACKED_CHAR}${conflicted_files}"
+				dirty=1
+			fi
+			state="*"
+		fi
+
+		local link=""
+		if [[ $cl =~ ^@?(cl/[0-9]+)\((p4head|p4base)\) ]]; then
+			local base_url="${BASH_REMATCH[1]}"
+			local p4=" (${BASH_REMATCH[2]})"
+			link=" http://${base_url}${p4}"
+		elif [[ -n "${cl}" ]]; then
+			link=" http://${cl}"
+		fi
+
+		echo "${branch}|${link}|${dirty}|${state}" > "${cache_file}.tmp" 2>/dev/null
+		mv "${cache_file}.tmp" "${cache_file}" 2>/dev/null
+		rm -f "$lock_file" 2>/dev/null
+	) &>/dev/null &
+	disown 2>/dev/null
 }
 
 function citc_prompt_vars() {
-	local start=$EPOCHREALTIME
-	local direction="up"
-	local jj_query="$(jj_query p4head::@)"
-	if [[ "${jj_query}" == "" ]]; then
-		local direction="down"
-		jj_query="$(jj_query p4base::@)"
-	fi
-	if [[ "${CITC_BENCHMARK}" != "" ]]; then
-		local duration="$(echo "scale=2; ($EPOCHREALTIME - $start)" | bc)s "
-	fi
-	local non_uploaded_ahead=$(echo "${jj_query}" |  tr -cd '^' | wc -c)
-	local ahead=$(( $(echo "${jj_query}" |  tr -cd '-' | wc -c) + $non_uploaded_ahead ))
-	jj_query=${jj_query//-/}
-	jj_query=${jj_query//^/}
-	IFS=',' read -r -a jj_query_array <<< "${duration},${jj_query}"
+	local ws_name="$(_citc_workspace_name)"
+	local cache_file="/dev/shm/citc_prompt_${USER}_${ws_name}"
 
-	local duration="${jj_query_array[0]}"
-	local cl="${jj_query_array[1]}"
-	local open_files="${jj_query_array[2]}"
-	local unstaged_files="0"
-	local conflicted_files="${jj_query_array[3]}"
-
-	if [[ "${cl}" == "cl/*" ]]; then
-		unstaged_files="${open_files}"
-		open_files="0"
+	if [[ -f "$cache_file" ]]; then
+		IFS="|" read -r SCM_BRANCH SCM_CHANGE SCM_DIRTY SCM_STATE < "$cache_file"
+		_update_citc_cache_async "$ws_name" "$PWD"
+	else
+		SCM_BRANCH="$ws_name"
+		SCM_CHANGE=""
+		SCM_DIRTY=""
+		SCM_STATE=""
+		_update_citc_cache_async "$ws_name" "$PWD"
 	fi
 
-	SCM_BRANCH="$(basename $(jj workspace root))"
-
-	if [[ "${ahead}" -gt 0 ]]; then
-		if [[ "${direction}" == "up" ]]; then
-			SCM_BRANCH+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_AHEAD_CHAR}"
-		else
-			SCM_BRANCH+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_BEHIND_CHAR}"
-		fi
-		SCM_BRANCH+="${ahead}"
+	SCM_PREFIX="${CITC_THEME_PROMPT_PREFIX:-${SCM_THEME_PROMPT_PREFIX:-}}"
+	SCM_SUFFIX="${CITC_THEME_PROMPT_SUFFIX:-${SCM_THEME_PROMPT_SUFFIX:-}}"
+	if [[ -n "$SCM_STATE" ]]; then
+		SCM_STATE="${CITC_THEME_PROMPT_DIRTY:-${SCM_THEME_PROMPT_DIRTY:-*}}"
 	fi
-
-	if [[ "${non_uploaded_ahead}" -gt 0 ]]; then
-		if [[ "${direction}" == "up" ]]; then
-			SCM_BRANCH+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_NON_UPLOADED_CHAR}"
-		else
-			SCM_BRANCH+="${SCM_CITC_AHEAD_BEHIND_PREFIX_CHAR}${SCM_CITC_BEHIND_NON_UPLOADED_CHAR}"
-		fi
-		SCM_BRANCH+="${non_uploaded_ahead}"
-	fi
-
-	if [[ "${open_files}" -gt 0 || "${unstaged_files}" -gt 0 || "${conflicted_files}" -gt 0 ]]; then
-		SCM_DIRTY=1
-		if [[ "${open_files}" -gt 0 ]]; then
-			SCM_BRANCH+=" ${SCM_CITC_STAGED_CHAR}${open_files}" && SCM_DIRTY=3
-		fi
-
-		if [[ "${unstaged_files}" -gt 0 ]]; then
-			SCM_BRANCH+=" ${SCM_CITC_UNSTAGED_CHAR}${unstaged_files}" && SCM_DIRTY=2
-		fi
-
-		if [[ "${conflicted_files}" -gt 0 ]]; then
-			SCM_BRANCH+=" ${SCM_CITC_UNTRACKED_CHAR}${conflicted_files}" && SCM_DIRTY=1
-		fi
-
-
-		SCM_STATE="${CITC_THEME_PROMPT_DIRTY:-${SCM_THEME_PROMPT_DIRTY?}}"
-	fi
-
-
-	SCM_PREFIX="${CITC_THEME_PROMPT_PREFIX:-${SCM_THEME_PROMPT_PREFIX-}}"
-	SCM_SUFFIX="${CITC_THEME_PROMPT_SUFFIX:-${SCM_THEME_PROMPT_SUFFIX-}}"
-
-	SCM_CHANGE=" ${duration}$(cl_linkify ${cl})"
 }
 
 function citc_prompt_info() {
 	citc_prompt_vars
-
-	echo -ne "${SCM_PREFIX?}${SCM_BRANCH?}${SCM_CHANGE?}${SCM_STATE?}${SCM_SUFFIX?}"
+	echo -ne "${SCM_PREFIX:-}${SCM_BRANCH:-}${SCM_CHANGE:-}${SCM_STATE:-}${SCM_SUFFIX:-}"
 }
