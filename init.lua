@@ -1223,12 +1223,16 @@ require('lazy').setup({
         },
       })
 
-      -- Prevent jjsigns from executing blocking jj commands on every keystroke (TextChanged/TextChangedI).
-      -- Instead, update signs on buffer open (BufReadPost), save (BufWritePost), or on-demand refresh.
+      -- Asynchronous Jujutsu signs updates: executes non-blocking `jj diff` commands in the background
+      -- so editing, typing, and saving remain fast and responsive without UI thread lag.
       local attach = require('jjsigns.attach')
-      local jj = require('jjsigns.jj')
+      local diff = require('jjsigns.diff')
       local signs = require('jjsigns.signs')
       local api = vim.api
+
+      local buffer_state = {}
+      local update_timers = {}
+      local active_jobs = {}
 
       local function should_attach(bufnr)
         if not api.nvim_buf_is_valid(bufnr) or vim.bo[bufnr].buftype ~= '' then
@@ -1238,29 +1242,75 @@ require('lazy').setup({
         return filepath ~= ''
       end
 
-      local function update_buffer_signs(bufnr)
+      local function cancel_buffer_job(bufnr)
+        local job = active_jobs[bufnr]
+        if job then
+          active_jobs[bufnr] = nil
+          pcall(function()
+            job:kill(9)
+          end)
+        end
+      end
+
+      local function cancel_buffer_timer(bufnr)
+        local timer = update_timers[bufnr]
+        if timer then
+          update_timers[bufnr] = nil
+          timer:stop()
+          timer:close()
+        end
+      end
+
+      local function update_buffer_signs_async(bufnr)
         if not should_attach(bufnr) then
           return
         end
 
         local filepath = api.nvim_buf_get_name(bufnr)
-        local file_dir = vim.fs.dirname(filepath)
-
-        if not jj.is_jj_repo(file_dir) then
-          return
-        end
-
-        local repo_root = jj.get_repo_root(file_dir)
+        local repo_root = vim.fs.root(filepath, '.jj')
         if not repo_root then
           return
         end
 
         local rel_path = filepath:sub(#repo_root + 2)
-        if not jj.is_file_tracked(rel_path, repo_root) then
+        if rel_path == '' then
           return
         end
 
-        signs.update_buffer_signs(bufnr, filepath, repo_root)
+        -- Cancel any running in-flight diff job for this buffer
+        cancel_buffer_job(bufnr)
+
+        local cmd = { 'jj', '--no-pager', '--color=never', 'diff', '--git', '--context=0', '-r', '@-..@', '--', rel_path }
+        local job = vim.system(cmd, {
+          cwd = repo_root,
+          text = true,
+        }, function(obj)
+          active_jobs[bufnr] = nil
+          if obj.code == 0 and obj.stdout then
+            local lines = vim.split(obj.stdout, '\n')
+            if lines[#lines] == '' then
+              table.remove(lines)
+            end
+            vim.schedule(function()
+              if not api.nvim_buf_is_valid(bufnr) or api.nvim_buf_get_name(bufnr) ~= filepath then
+                return
+              end
+              local hunks = diff.parse_diff(lines)
+              local signs_data = diff.hunks_to_signs(hunks)
+              signs.place_signs(bufnr, signs_data)
+            end)
+          end
+        end)
+
+        active_jobs[bufnr] = job
+      end
+
+      local function update_buffer_debounced(bufnr, delay)
+        cancel_buffer_timer(bufnr)
+        update_timers[bufnr] = vim.defer_fn(function()
+          update_timers[bufnr] = nil
+          update_buffer_signs_async(bufnr)
+        end, delay or 250)
       end
 
       attach.attach_to_buffer = function(bufnr)
@@ -1269,30 +1319,44 @@ require('lazy').setup({
         end
 
         local filepath = api.nvim_buf_get_name(bufnr)
-        local file_dir = vim.fs.dirname(filepath)
-
-        if not jj.is_jj_repo(file_dir) then
-          return
-        end
-
-        local repo_root = jj.get_repo_root(file_dir)
+        local repo_root = vim.fs.root(filepath, '.jj')
         if not repo_root then
           return
         end
 
-        local rel_path = filepath:sub(#repo_root + 2)
-        if not jj.is_file_tracked(rel_path, repo_root) then
-          return
+        if buffer_state[bufnr] then
+          cancel_buffer_timer(bufnr)
+          cancel_buffer_job(bufnr)
         end
+        buffer_state[bufnr] = true
 
         local group = api.nvim_create_augroup('jjsigns_buffer_' .. bufnr, { clear = true })
 
-        -- Update on buffer write (saving)
+        -- Debounced async update during editing/typing
+        api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
+          group = group,
+          buffer = bufnr,
+          callback = function()
+            update_buffer_debounced(bufnr, 250)
+          end,
+        })
+
+        -- Immediate async update on buffer write (saving)
         api.nvim_create_autocmd('BufWritePost', {
           group = group,
           buffer = bufnr,
           callback = function()
-            update_buffer_signs(bufnr)
+            cancel_buffer_timer(bufnr)
+            update_buffer_signs_async(bufnr)
+          end,
+        })
+
+        -- Update on buffer focus / enter
+        api.nvim_create_autocmd({ 'BufEnter', 'FocusGained' }, {
+          group = group,
+          buffer = bufnr,
+          callback = function()
+            update_buffer_debounced(bufnr, 100)
           end,
         })
 
@@ -1301,22 +1365,26 @@ require('lazy').setup({
           group = group,
           buffer = bufnr,
           callback = function()
+            cancel_buffer_timer(bufnr)
+            cancel_buffer_job(bufnr)
             signs.clear_buffer(bufnr)
+            buffer_state[bufnr] = nil
           end,
         })
 
-        -- Initial sign update on open
-        update_buffer_signs(bufnr)
+        -- Initial async sign update on open
+        update_buffer_signs_async(bufnr)
       end
 
       attach.update_buffer = function(bufnr, _filepath)
-        update_buffer_signs(bufnr)
+        update_buffer_signs_async(bufnr)
       end
 
       -- Manual refresh keymap: <leader>hr to refresh Jujutsu signs for current buffer
       vim.keymap.set('n', '<leader>hr', function()
         local bufnr = api.nvim_get_current_buf()
-        update_buffer_signs(bufnr)
+        cancel_buffer_timer(bufnr)
+        update_buffer_signs_async(bufnr)
       end, { desc = 'Git/JJ [H]unk [R]efresh signs' })
 
       -- Link directly to GitSigns highlight groups for exact visual matching
