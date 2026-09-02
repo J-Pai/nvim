@@ -777,7 +777,7 @@ require('lazy').setup({
       -- Helper to identify Google3 / CitC files
       local function is_google_path(path)
         if not path or path == '' then
-          return false
+          path = vim.uv.cwd() or ''
         end
         return vim.startswith(path, '/google') or vim.fs.root(path, { '.citc' }) ~= nil
       end
@@ -808,6 +808,8 @@ require('lazy').setup({
       -- Configure standard Mason servers: attach only to non-Google3 files
       for name, server in pairs(servers) do
         server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+        server.workspace_required = true
+        server.root_markers = {}
         local prev_root_dir = server.root_dir
         server.root_dir = function(bufnr, cb)
           local fname = vim.api.nvim_buf_get_name(bufnr)
@@ -817,7 +819,9 @@ require('lazy').setup({
           if prev_root_dir then
             return prev_root_dir(bufnr, cb)
           end
-          cb(vim.fs.root(bufnr, { '.git', 'compile_commands.json', 'Cargo.toml', 'pyproject.toml', 'Makefile' }))
+          local root = vim.fs.root(bufnr, { '.git', 'compile_commands.json', 'Cargo.toml', 'pyproject.toml', 'Makefile' })
+          if cb then cb(root) end
+          return root
         end
         vim.lsp.config(name, server)
         vim.lsp.enable(name)
@@ -836,6 +840,8 @@ require('lazy').setup({
           '--noforward_sync_responses',
           '--request_options=' .. table.concat(ciderlsp_settings, ','),
         },
+        workspace_required = true,
+        root_markers = {},
         capabilities = capabilities,
         filetypes = {
           'borg',
@@ -866,8 +872,10 @@ require('lazy').setup({
         root_dir = function(bufnr, cb)
           local fname = vim.api.nvim_buf_get_name(bufnr)
           if is_google_path(fname) then
-            cb '/google'
+            if cb then cb '/google' end
+            return '/google'
           end
+          return nil
         end,
       })
       vim.lsp.enable 'ciderlsp'
